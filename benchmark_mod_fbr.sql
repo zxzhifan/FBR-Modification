@@ -13,8 +13,8 @@ limit 40000
 ;
 */
 ################################################# FBR1
-drop table if exists zz_cx.fm_fbr1_fc_4;
-create table if not exists zz_cx.fm_fbr1_fc_4
+drop table if exists zz_dev.fm_fbr1_fc_4;
+create table if not exists zz_dev.fm_fbr1_fc_4
 select distinct ctrl.fc_all_id
 from zz_cx.temp_match_fbr_ctrl_5 ctrl
 straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
@@ -22,10 +22,10 @@ straight_join tmp.temp_map_fbcx_fbr_r fbcm on (fbcm.doc_nbr_prime = fc.doc_nbr_p
 straight_join zz_cx.temp_map_bcode_acc mbc on (mbc.bcode = fc.tkt_endorse_cd and mbc.tar_nbr = fbcm.frt_nbr and mbc.carr_cd = fbcm.carr_cd and mbc.rule_nbr = fbcm.rule_nbr);
 
 
-drop table if exists zz_cx.fm_fbr1_r3_4;
-create table if not exists zz_cx.fm_fbr1_r3_4
+drop table if exists zz_dev.fm_fbr1_r3_4;
+create table if not exists zz_dev.fm_fbr1_r3_4
 select distinct fc.fc_all_id, r8.rule_id as r8_id, r2.rule_id as r2_id, r3.cat_id as r3_id, r2s.dir_ind, r3.base_tbl_t989, g16.ff_nbr
-from zz_cx.fm_fbr1_fc_4 ctrl
+from zz_dev.fm_fbr1_fc_4 ctrl
 straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
 straight_join tmp.temp_map_fbcx_fbr_r fbcm on (fbcm.doc_nbr_prime = fc.doc_nbr_prime and fbcm.fc_cpn_nbr = fc.fc_cpn_nbr)
 straight_join zz_cx.temp_map_bcode_acc mbc on (mbc.bcode = fc.tkt_endorse_cd and mbc.tar_nbr = fbcm.frt_nbr and mbc.carr_cd = fbcm.carr_cd and mbc.rule_nbr = fbcm.rule_nbr)
@@ -57,33 +57,33 @@ and fc.jrny_dep_date between r2t.tvl_eff_date and r2t.tvl_dis_date
 and if(dor.tbl_nbr is null, true, fc.trnsc_date between dor.tkt_fr_date and dor.tkt_to_date)
 and if(dor.tbl_nbr is null, true, fc.fc_dep_date between dor.tvl_fr_date and dor.tvl_to_date);
 
-alter table zz_cx.fm_fbr1_r3_4
+alter table zz_dev.fm_fbr1_r3_4
 add index idx_tmp_id(fc_all_id, base_tbl_t989);
 
-#analyze table zz_cx.fm_fbr1_r3_4;
+#analyze table zz_dev.fm_fbr1_r3_4;
 
-drop table if exists zz_cx.fm_fbr1_g16_4;
-create table zz_cx.fm_fbr1_g16_4
+drop table if exists zz_dev.fm_fbr1_g16_4;
+create table zz_dev.fm_fbr1_g16_4
 select distinct fc_all_id, ff_nbr
-from zz_cx.fm_fbr1_r3_4;
+from zz_dev.fm_fbr1_r3_4;
 
-drop table if exists zz_cx.fm_fbr1_t989_4;
-create table zz_cx.fm_fbr1_t989_4
+drop table if exists zz_dev.fm_fbr1_t989_4;
+create table zz_dev.fm_fbr1_t989_4
 select distinct fc_all_id, base_tbl_t989
-from zz_cx.fm_fbr1_r3_4;
+from zz_dev.fm_fbr1_r3_4;
 
-alter table zz_cx.fm_fbr1_t989_4
+alter table zz_dev.fm_fbr1_t989_4
 add index idx_fbr_t989_id(fc_all_id);
 
-alter table zz_cx.fm_fbr1_g16_4
+alter table zz_dev.fm_fbr1_g16_4
 add index idx_fbr_g16_id(fc_all_id);
 
 
-drop table if exists zz_cx.fm_fbr1_f_4;
+drop table if exists zz_dev.fm_fbr1_f_4;
 
-create table zz_cx.fm_fbr1_f_4
+create table zz_dev.fm_fbr1_f_4
 select distinct ctrl.fc_all_id, f.fare_id, ctrl.ff_nbr
-from zz_cx.fm_fbr1_g16_4 ctrl
+from zz_dev.fm_fbr1_g16_4 ctrl
 straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
 /*
 straight_join tmp.temp_map_fbcx_fbr_r fbcm on (fbcm.doc_nbr_prime = fc.doc_nbr_prime and fbcm.fc_cpn_nbr = fc.fc_cpn_nbr)
@@ -100,24 +100,24 @@ and fc.jrny_dep_date between ft.tvl_eff_date and ft.tvl_dis_date
 # not sure the logic is entirely right: and if(fc.map_di_ind = 'F', f.ftnt <> 'T', f.ftnt <> 'F')		-- useful for domestic, for international, ftnt.di is always 'F', international footnote can never be 'F' or 'T'
 ;
 ####################
-drop table if exists zz_cx.fm_fbr1_syn_4;
-create table zz_cx.fm_fbr1_syn_4
+drop table if exists zz_dev.fm_fbr1_syn_4;
+create table zz_dev.fm_fbr1_syn_4
 select distinct
 fc.fc_all_id, r2_id as r2_rule_id, f.fare_id as f_fare_id, r8_id as r8_rule_id, r3_id as r3_cat_id, cr.dir_ind, t989.tbl_nbr as t989_tbl_nbr, t989.bf_pax_type,  t989.bf_rule_tar as frt_nbr
 
-from zz_cx.fm_fbr1_f_4 ctrl -- fare part
+from zz_dev.fm_fbr1_f_4 ctrl -- fare part
 
 straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
 
 straight_join atpco_fare.atpco_fare f on (ctrl.fare_id = f.fare_id and ctrl.ff_nbr = f.tar_nbr)
 
-join zz_cx.fm_fbr1_t989_4 ct on ctrl.fc_all_id = ct.fc_all_id  -- r8 to r2
+join zz_dev.fm_fbr1_t989_4 ct on ctrl.fc_all_id = ct.fc_all_id  -- r8 to r2
 
 straight_join atpco_fare.atpco_t989_base_fare t989 on (t989.tbl_nbr = ct.base_tbl_t989 and t989.bf_appl <> 'N')
 
 straight_join zz_cx.g16_temp g16 on (g16.carr_cd = fc.fc_carr_cd and (g16.frt_nbr = t989.bf_rule_tar or (t989.bf_rule_tar = '000' and g16.pri_ind <> 'X')) and ctrl.ff_nbr = g16.ff_nbr)
 
-straight_join zz_cx.fm_fbr1_r3_4 cr on ct.fc_all_id = cr.fc_all_id and ct.base_tbl_t989 = cr.base_tbl_t989
+straight_join zz_dev.fm_fbr1_r3_4 cr on ct.fc_all_id = cr.fc_all_id and ct.base_tbl_t989 = cr.base_tbl_t989
 
 where  (f.rule_nbr = t989.bf_rule_nbr or t989.bf_rule_nbr = '')
 and if(t989.bf_fc_len = 0, true, 
@@ -136,11 +136,11 @@ and (f.ow_rt_ind = t989.bf_ow_rt or t989.bf_ow_rt = '')
 ;
 
 
-drop table if exists zz_cx.fm_fbr1_loc_4;
-create table zz_cx.fm_fbr1_loc_4 
+drop table if exists zz_dev.fm_fbr1_loc_4;
+create table zz_dev.fm_fbr1_loc_4 
 select distinct 
 fc.doc_nbr_prime, fc.fc_cpn_nbr, ctrl.fc_all_id, ctrl.r2_rule_id as r2_25_rule_id, ctrl.r3_cat_id as r3_25_cat_id, f.fare_id, 'R' as map_type, 'B' as map_code
- from zz_cx.fm_fbr1_syn_4 ctrl
+ from zz_dev.fm_fbr1_syn_4 ctrl
 join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
 join atpco_fare.atpco_fare f on ctrl.f_fare_id = f.fare_id
 
@@ -221,8 +221,8 @@ drop table if exists zz_dev.temp_match_fbr_tc1_4;
 create table zz_dev.temp_match_fbr_tc1_4;
 */
 
-drop table if exists zz_cx.fm_fbr2_f_4;
-create table if not exists zz_cx.fm_fbr2_f_4
+drop table if exists zz_dev.fm_fbr2_f_4;
+create table if not exists zz_dev.fm_fbr2_f_4
 select distinct
 ctrl.fc_all_id, f.fare_id, fbc_match, f.tar_nbr
 from zz_cx.temp_match_fbr_ctrl_5 ctrl
@@ -241,11 +241,11 @@ and fc.jrny_dep_date between ft.tvl_eff_date and ft.tvl_dis_date
 ;
 
 #select * from tmp.temp_map_fbcx_fbr_r;
-drop table if exists zz_cx.fm_fbr2_r3_4;
-create table zz_cx.fm_fbr2_r3_4
+drop table if exists zz_dev.fm_fbr2_r3_4;
+create table zz_dev.fm_fbr2_r3_4
 select distinct
 fc.fc_all_id, r8.rule_id as r8_id, r2.rule_id as r2_id, r3.cat_id as r3_id, r2s.dir_ind, r3.base_tbl_t989
-from zz_cx.fm_fbr2_f_4 ctrl
+from zz_dev.fm_fbr2_f_4 ctrl
 
 straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
 
@@ -279,32 +279,32 @@ and if(r3.rslt_fare_tkt_cd <> '', r3.rslt_fare_tkt_cd = fbcm.fbc_rule, if(r3.rsl
 and if(dor.tbl_nbr is null, true, fc.trnsc_date between dor.tkt_fr_date and dor.tkt_to_date)
 and if(dor.tbl_nbr is null, true, fc.fc_dep_date between dor.tvl_fr_date and dor.tvl_to_date);
 
-alter table zz_cx.fm_fbr2_r3_4
+alter table zz_dev.fm_fbr2_r3_4
 add index idx_tmp_id(fc_all_id, base_tbl_t989);
 
-drop table if exists zz_cx.fm_fbr2_t989_4;
-create table zz_cx.fm_fbr2_t989_4
+drop table if exists zz_dev.fm_fbr2_t989_4;
+create table zz_dev.fm_fbr2_t989_4
 select distinct fc_all_id, base_tbl_t989
-from zz_cx.fm_fbr2_r3_4;
+from zz_dev.fm_fbr2_r3_4;
 
-alter table zz_cx.fm_fbr2_t989_4
+alter table zz_dev.fm_fbr2_t989_4
 add index idx_fbr_t989_id(fc_all_id);
 
 
-drop table if exists zz_cx.fm_fbr2_syn_4;
-create table if not exists zz_cx.fm_fbr2_syn_4
+drop table if exists zz_dev.fm_fbr2_syn_4;
+create table if not exists zz_dev.fm_fbr2_syn_4
 select distinct fc.fc_all_id, r2_id as r2_rule_id, r3_id as r3_25_cat_id, 
 f.fare_id as f_fare_id, r8_id as r8_rule_id, t989.tbl_nbr as t989_tbl_nbr, t989.bf_pax_type, cr.dir_ind, g16.frt_nbr
-from zz_cx.fm_fbr2_f_4 ctrl
+from zz_dev.fm_fbr2_f_4 ctrl
 straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
 
 straight_join atpco_fare.atpco_fare f on f.fare_id = ctrl.fare_id
 
-join zz_cx.fm_fbr2_t989_4 ct on ctrl.fc_all_id = ct.fc_all_id 
+join zz_dev.fm_fbr2_t989_4 ct on ctrl.fc_all_id = ct.fc_all_id 
 
 straight_join atpco_fare.atpco_t989_base_fare t989 on (t989.tbl_nbr = ct.base_tbl_t989 and t989.bf_appl <> 'N')
 
-straight_join zz_cx.fm_fbr2_r3_4 cr on (ct.fc_all_id = cr.fc_all_id and ct.base_tbl_t989 = cr.base_tbl_t989)
+straight_join zz_dev.fm_fbr2_r3_4 cr on (ct.fc_all_id = cr.fc_all_id and ct.base_tbl_t989 = cr.base_tbl_t989)
 
 straight_join zz_cx.g16_temp g16 on ((g16.carr_cd = fc.fc_carr_cd and (g16.frt_nbr = t989.bf_rule_tar or (t989.bf_rule_tar = '000' and g16.pri_ind <> 'X'))) and g16.ff_nbr = f.tar_nbr and g16.ff_nbr = ctrl.tar_nbr)
 
@@ -320,10 +320,10 @@ and if(t989.bf_fc_len = 0, true,
 and (f.rtg_nbr = t989.bf_rtg_nbr or t989.bf_rtg_nbr = '99999')
 and (f.ow_rt_ind = t989.bf_ow_rt or t989.bf_ow_rt = '');
 
-drop table if exists zz_cx.fm_fbr2_loc_4;
-create table if not exists zz_cx.fm_fbr2_loc_4
+drop table if exists zz_dev.fm_fbr2_loc_4;
+create table if not exists zz_dev.fm_fbr2_loc_4
 select distinct fc.doc_nbr_prime, fc.fc_cpn_nbr, ctrl.fc_all_id, ctrl.r2_rule_id as r2_25_rule_id, ctrl.r3_25_cat_id as r3_25_cat_id, f.fare_id, 'R' as map_type, 'B' as map_code
-from zz_cx.fm_fbr2_syn_4 ctrl
+from zz_dev.fm_fbr2_syn_4 ctrl
  
 join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
 join atpco_fare.atpco_fare f on ctrl.f_fare_id = f.fare_id
@@ -418,8 +418,8 @@ add primary key tmp_mapfbcxfbrm(doc_nbr_prime, fc_cpn_nbr, fbcx_mode, tkt_cd_ind
 
 */
 
-drop table if exists zz_cx.fm_fbr3_f_4;
-create table if not exists zz_cx.fm_fbr3_f_4
+drop table if exists zz_dev.fm_fbr3_f_4;
+create table if not exists zz_dev.fm_fbr3_f_4
 select distinct
 ctrl.fc_all_id, f.fare_id, fbc_match
 from zz_cx.temp_match_fbr_ctrl_5 ctrl
@@ -444,11 +444,11 @@ and fc.jrny_dep_date between ft.tvl_eff_date and ft.tvl_dis_date
 and ctrl.map_code <> '2'
 ;
 
-drop table if exists zz_cx.fm_fbr3_r2_4;
-create table zz_cx.fm_fbr3_r2_4
+drop table if exists zz_dev.fm_fbr3_r2_4;
+create table zz_dev.fm_fbr3_r2_4
 select distinct
 fc.fc_all_id, r8.rule_id as r8_id, r8.tar_nbr, r8.carr_cd, r8.rule_nbr, r8.pax_type, fc.fc_fbc, fbcm.fbc_rule
-from zz_cx.fm_fbr3_f_4 ctrl
+from zz_dev.fm_fbr3_f_4 ctrl
 
 straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
 
@@ -463,11 +463,11 @@ where
  fc.fare_lockin_date between (r8t.rec_add_date - interval 1 day) and if(r8t.rec_cnx_date = '9999-12-31', r8t.rec_cnx_date, r8t.rec_cnx_date + interval 1 day)
 and fc.jrny_dep_date between r8t.tvl_eff_date and r8t.tvl_dis_date;
 
-drop table if exists zz_cx.fm_fbr3_r3_4;
-create table zz_cx.fm_fbr3_r3_4
+drop table if exists zz_dev.fm_fbr3_r3_4;
+create table zz_dev.fm_fbr3_r3_4
 select distinct
 fc.fc_all_id, ctrl.r8_id as r8_id, r2.rule_id as r2_id, r3.cat_id as r3_id, r2s.dir_ind, r3.base_tbl_t989
-from zz_cx.fm_fbr3_r2_4 ctrl
+from zz_dev.fm_fbr3_r2_4 ctrl
 
 straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
 
@@ -493,35 +493,35 @@ and fc.fare_lockin_date between (r2t.rec_add_date - interval 1 day) and if(r2t.r
 and fc.jrny_dep_date between r2t.tvl_eff_date and r2t.tvl_dis_date;
 
 
-alter table zz_cx.fm_fbr3_r3_4
+alter table zz_dev.fm_fbr3_r3_4
 add index idx_tmp_id(fc_all_id, base_tbl_t989);
 
-drop table if exists zz_cx.fm_fbr3_t989_4;
-create table zz_cx.fm_fbr3_t989_4
+drop table if exists zz_dev.fm_fbr3_t989_4;
+create table zz_dev.fm_fbr3_t989_4
 select distinct fc_all_id, base_tbl_t989
-from zz_cx.fm_fbr3_r3_4;
+from zz_dev.fm_fbr3_r3_4;
 
-alter table zz_cx.fm_fbr3_t989_4
+alter table zz_dev.fm_fbr3_t989_4
 add index idx_fbr_t989_id(fc_all_id);
 
-drop table if exists zz_cx.fm_fbr3_syn_4;
-create table if not exists zz_cx.fm_fbr3_syn_4
+drop table if exists zz_dev.fm_fbr3_syn_4;
+create table if not exists zz_dev.fm_fbr3_syn_4
 select distinct fc.fc_all_id, r2_id as r2_rule_id, r3_id as r3_25_cat_id, 
 f.fare_id as f_fare_id, r8_id as r8_rule_id, t989.tbl_nbr as t989_tbl_nbr, t989.bf_pax_type, cr.dir_ind, g16.frt_nbr, ctrl.fbc_match
 
-from zz_cx.fm_fbr3_f_4 ctrl
+from zz_dev.fm_fbr3_f_4 ctrl
 
 straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
 
 straight_join atpco_fare.atpco_fare f on f.fare_id = ctrl.fare_id
 
-join zz_cx.fm_fbr3_t989_4 ct on ctrl.fc_all_id = ct.fc_all_id 
+join zz_dev.fm_fbr3_t989_4 ct on ctrl.fc_all_id = ct.fc_all_id 
 
 straight_join atpco_fare.atpco_t989_base_fare t989 on (t989.tbl_nbr = ct.base_tbl_t989 and t989.bf_appl <> 'N')
 
 straight_join zz_cx.g16_temp g16 on (g16.carr_cd = fc.fc_carr_cd and (g16.frt_nbr = t989.bf_rule_tar or (t989.bf_rule_tar = '000' and g16.pri_ind <> 'X')))
 
-straight_join zz_cx.fm_fbr3_r3_4 cr on ct.fc_all_id = cr.fc_all_id and ct.base_tbl_t989 = cr.base_tbl_t989
+straight_join zz_dev.fm_fbr3_r3_4 cr on ct.fc_all_id = cr.fc_all_id and ct.base_tbl_t989 = cr.base_tbl_t989
 
 where fc.doc_nbr_prime > 0
 
@@ -542,10 +542,10 @@ and (f.ow_rt_ind = t989.bf_ow_rt or t989.bf_ow_rt = '')
 -- and (fc.fc_pax_type = t989.c25_pax_type or t989.c25_pax_type in ('ADT', 'JCB', ''))	-- JCB and ADT are general
 ;
 
-drop table if exists zz_cx.fm_fbr3_loc_4;
-create table if not exists zz_cx.fm_fbr3_loc_4
+drop table if exists zz_dev.fm_fbr3_loc_4;
+create table if not exists zz_dev.fm_fbr3_loc_4
 select distinct fc.doc_nbr_prime, fc.fc_cpn_nbr, ctrl.fc_all_id, ctrl.r2_rule_id as r2_25_rule_id, ctrl.r3_25_cat_id as r3_25_cat_id, f.fare_id, 'R' as map_type, 'B' as map_code
-from zz_cx.fm_fbr3_syn_4 ctrl
+from zz_dev.fm_fbr3_syn_4 ctrl
 
 straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
 
@@ -654,8 +654,7 @@ and fc.fare_lockin_date between (ft.rec_add_date - interval 1 day) and if(ft.rec
 and fc.jrny_dep_date between ft.tvl_eff_date and ft.tvl_dis_date
 # not sure the logic is entirely right: and if(fc.map_di_ind = 'F', f.ftnt <> 'T', f.ftnt <> 'F')		-- useful for domestic, for international, ftnt.di is always 'F', international footnote can never be 'F' or 'T'
 
-and ctrl.map_code <> '2'
-;
+and ctrl.map_code <> '2';
 
 /*
 alter table zz_cx.temp_fbcx_fbr_r
@@ -664,46 +663,64 @@ add index idx_fbr_temp (fbc_rule, dsg_rule, r8_rule_id);
 
 alter table zz_cx.temp_fbcx_fbr_r
 drop index idx_fbr_temp2,
-add index idx_fbr_temp2 (tar_nbr, carr_cd, rule_nbr, r2_25_rule_id, fbc_rule, dsg_rule);
+add index idx_fbr_temp2 (tar_nbr, carr_cd, rule_nbr, r2_25_rule_id, r3_25_cat_id, fbc_rule, dsg_rule);
 */
+
 drop table if exists zz_dev.fm_fbr4_r2_4;
 
 create table if not exists zz_dev.fm_fbr4_r2_4 
-select distinct fc.fc_all_id, r8.tar_nbr, r8.carr_cd, r8.rule_nbr, r8.pax_type,
-fc.fc_fbc, 
-fbcm.fbc_rule from zz_cx.temp_match_fbr_ctrl_5 ctrl
+select distinct fc.fc_all_id, r8.tar_nbr, r8.carr_cd, r8.rule_nbr, r8.pax_type, fc.fc_fbc, fbcm.fbc_rule
+from zz_cx.temp_match_fbr_ctrl_5 ctrl
 straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)  
 straight_join tmp.temp_map_fbcx_fbr_r fbcm on (fbcm.doc_nbr_prime = fc.doc_nbr_prime and fbcm.fc_cpn_nbr = fc.fc_cpn_nbr and fbcm.fbcx_mode = 'X')  
 straight_join atpco_fare.atpco_r8_fbr r8 on (r8.tar_nbr = fbcm.frt_nbr and r8.carr_cd = fbcm.carr_cd and r8.rule_nbr = fbcm.rule_nbr and r8.proc_ind in ('N', 'R')) 
-straight_join atpco_fare.atpco_r8_fbr_state r8t on (r8t.rule_id = r8.rule_id)  
+straight_join atpco_fare.atpco_r8_fbr_state r8t on (r8t.rule_id = r8.rule_id)
 
-left join zz_cx.temp_fbcx_fbr_r fbcx  on (fbcx.r8_rule_id = r8.rule_id  and fbcx.fbc_rule = fc.fc_fbc  and (fbcx.dsg_rule = fc.fc_tkt_dsg ) )  
-left join zz_cx.temp_fbcx_fbr_r fbcx1  on fbcx1.r8_rule_id = r8.rule_id  and fbcx1.fbc_rule = fc.fc_fbc  and (fbcx1.dsg_rule = '')
+straight_join zz_cx.temp_fbcx_fbr_r fbcx  on (fbcx.r8_rule_id = r8.rule_id and fbcx.fbc_rule = fc.fc_fbc  and fbcx.dsg_rule = fc.fc_tkt_dsg)  
 
-straight_join atpco_fare.atpco_r2_cat25_ctrl r2 on (r2.carr_cd = r8.carr_cd and r2.tar_nbr = r8.tar_nbr and r2.rule_nbr = r8.rule_nbr and r2.proc_ind in ('N', 'R')) 
-straight_join atpco_fare.atpco_r2_cat25_ctrl_state r2t on (r2t.rule_id = r2.rule_id) 
-straight_join atpco_fare.atpco_r2_cat25_ctrl_sup r2s on (r2s.rule_id = r2.rule_id)  
-
-where fc.doc_nbr_prime > 0 and (fbcx.rcid is not null or fbcx.rcid is not null) 
+where fc.doc_nbr_prime > 0
 #----------------------- record 8 to the fare component ------------------------------------------- -- loc testing is not implemented 
 and fc.fare_lockin_date between (r8t.rec_add_date - interval 1 day) 
 and if(r8t.rec_cnx_date = '9999-12-31', r8t.rec_cnx_date, r8t.rec_cnx_date + interval 1 day) 
 and fc.jrny_dep_date between r8t.tvl_eff_date and r8t.tvl_dis_date 
 
  #----------------------- check all conditions that come with datawarehouse.temp_fbcx_fbr ------------------------------------------- 
+and fc.fare_lockin_date between date_add(fbcx.rec_add_date, interval -1 day) and if(fbcx.rec_cnx_date = '9999-12-31', fbcx.rec_cnx_date, date_add(fbcx.rec_cnx_date, interval 1 day))   
+and fc.fare_lockin_date between date_add(fbcx.rec_add_date, interval -1 day) and fbcx.tvl_dis_date
+and fbcx.tvl_dis_date and fc.jrny_dep_date between fbcx.tvl_eff_date and fbcx.tvl_dis_date  
+and ctrl.map_code <> '2';
 
-and fbcx.tvl_dis_date and fc.jrny_dep_date between fbcx.tvl_eff_date and fbcx.tvl_dis_date  and ctrl.map_code <> '2';
+alter table zz_dev.fm_fbr4_r2_4
+add unique index idx_uni(fc_all_id, tar_nbr, carr_cd, rule_nbr, pax_type, fc_fbc, fbc_rule);
+
+insert ignore into zz_dev.fm_fbr4_r2_4 
+select distinct fc.fc_all_id, r8.tar_nbr, r8.carr_cd, r8.rule_nbr, r8.pax_type, fc.fc_fbc, fbcm.fbc_rule
+from zz_cx.temp_match_fbr_ctrl_5 ctrl
+straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)  
+straight_join tmp.temp_map_fbcx_fbr_r fbcm on (fbcm.doc_nbr_prime = fc.doc_nbr_prime and fbcm.fc_cpn_nbr = fc.fc_cpn_nbr and fbcm.fbcx_mode = 'X')  
+straight_join atpco_fare.atpco_r8_fbr r8 on (r8.tar_nbr = fbcm.frt_nbr and r8.carr_cd = fbcm.carr_cd and r8.rule_nbr = fbcm.rule_nbr and r8.proc_ind in ('N', 'R')) 
+straight_join atpco_fare.atpco_r8_fbr_state r8t on (r8t.rule_id = r8.rule_id)
+
+straight_join zz_cx.temp_fbcx_fbr_r fbcx  on (fbcx.r8_rule_id = r8.rule_id and fbcx.fbc_rule = fc.fc_fbc  and fbcx.dsg_rule = '')  
+
+where fc.doc_nbr_prime > 0
+#----------------------- record 8 to the fare component ------------------------------------------- -- loc testing is not implemented 
+and fc.fare_lockin_date between (r8t.rec_add_date - interval 1 day) 
+and if(r8t.rec_cnx_date = '9999-12-31', r8t.rec_cnx_date, r8t.rec_cnx_date + interval 1 day) 
+and fc.jrny_dep_date between r8t.tvl_eff_date and r8t.tvl_dis_date 
+
+ #----------------------- check all conditions that come with datawarehouse.temp_fbcx_fbr ------------------------------------------- 
+and fc.fare_lockin_date between date_add(fbcx.rec_add_date, interval -1 day) and if(fbcx.rec_cnx_date = '9999-12-31', fbcx.rec_cnx_date, date_add(fbcx.rec_cnx_date, interval 1 day))   
+and fc.fare_lockin_date between date_add(fbcx.rec_add_date, interval -1 day) and fbcx.tvl_dis_date
+and fbcx.tvl_dis_date and fc.jrny_dep_date between fbcx.tvl_eff_date and fbcx.tvl_dis_date  
+and ctrl.map_code <> '2';
 
 
 drop table if exists zz_dev.fm_fbr4_r3_4;
 
 create table if not exists zz_dev.fm_fbr4_r3_4
-select distinct fc.fc_all_id, r2.rule_id as r2_id, r3.cat_id as r3_id, r3.base_tbl_t989,
-ctrl.tar_nbr, ctrl.carr_cd, ctrl.rule_nbr, ctrl.fc_fbc
-, fbcx.rcid as fbcx_id
-#, r8.rule_id as r8_id, r2s.dir_ind
+select distinct fc.fc_all_id, r2.rule_id as r2_id, r3.cat_id as r3_id, r3.base_tbl_t989, ctrl.tar_nbr, ctrl.carr_cd, ctrl.rule_nbr, ctrl.fc_fbc, fbcx.rcid as fbcx_id
 from zz_dev.fm_fbr4_r2_4 ctrl
-
 straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
 
 #straight_join tmp.temp_map_fbcx_fbr_r fbcm on (fbcm.doc_nbr_prime = fc.doc_nbr_prime and fbcm.fc_cpn_nbr = fc.fc_cpn_nbr and fbcm.fbcx_mode = 'X')
@@ -714,10 +731,10 @@ straight_join atpco_fare.atpco_r2_cat25_ctrl_sup r2s on (r2s.rule_id = r2.rule_i
 
 straight_join atpco_fare.atpco_cat25 r3 on (r3.cat_id = r2s.tbl_nbr)
 left join atpco_fare.atpco_t994_date dor on (dor.tbl_nbr = r3.dt_ovrd_t994)
+
 straight_join zz_cx.temp_fbcx_fbr_r fbcx 
 on (fbcx.tar_nbr = ctrl.tar_nbr and fbcx.carr_cd = ctrl.carr_cd and fbcx.rule_nbr = ctrl.rule_nbr and fbcx.r2_25_rule_id = r2.rule_id and fbcx.r3_25_cat_id = r3.cat_id 
-and fbcx.fbc_rule = fc.fc_fbc 
-and (fbcx.dsg_rule = fc.fc_tkt_dsg or fbcx.dsg_rule = ''))
+and fbcx.fbc_rule = fc.fc_fbc and (fbcx.dsg_rule = fc.fc_tkt_dsg or fbcx.dsg_rule = ''))
 
 straight_join zz_cx.temp_tbl_fc_loc fc_loc on (fc_loc.doc_nbr_prime = fc.doc_nbr_prime and fc_loc.fc_cpn_nbr = fc.fc_cpn_nbr and fc_loc.map_di_ind = fc.map_di_ind)		
 # to allow base fare matching and r2 loaction testing using somewhat different orig/dest
@@ -755,15 +772,11 @@ and (case r2s.dir_ind
 				(fo.fc_loc is not null and fd.fc_loc is not null)
                 or
                 (ro.fc_loc is not null and rd.fc_loc is not null)
-	end)
-    
-;
+	end);
 
 
 alter table zz_dev.fm_fbr4_r3_4
 add index idx_tmp_id(fc_all_id, base_tbl_t989);
-
-analyze table zz_dev.fm_fbr4_r3_4;
 
 drop table if exists zz_dev.fm_fbr4_t989_4;
 create table zz_dev.fm_fbr4_t989_4
@@ -777,16 +790,8 @@ add index idx_fbr_t989_id(fc_all_id);
 drop table if exists zz_dev.fm_fbr4_syn_4;
 create table if not exists zz_dev.fm_fbr4_syn_4
 select distinct fc.fc_all_id, r2_id as r2_rule_id, r3_id as r3_25_cat_id, 
-f.fare_id as f_fare_id, 
-#r8_id as r8_rule_id, 
-#t989.tbl_nbr as t989_tbl_nbr, 
-t989.bf_pax_type, 
-#cr.dir_ind, 
-g16.frt_nbr, 
-#ctrl.fbc_match, 
-cr.fbcx_id
+f.fare_id as f_fare_id, t989.bf_pax_type, g16.frt_nbr, cr.fbcx_id
 from zz_dev.fm_fbr4_f_4 ctrl
-
 straight_join zz_cx.temp_tbl_fc_all fc on (ctrl.fc_all_id = fc.fc_all_id)
 
 straight_join atpco_fare.atpco_fare f on f.fare_id = ctrl.fare_id
@@ -799,7 +804,12 @@ where fc.doc_nbr_prime > 0
 
 #----------------------- matching t989 to the base fare -------------------------------------------
 and (f.rule_nbr = t989.bf_rule_nbr or t989.bf_rule_nbr = '')
-and if(t989.bf_fc = '', true, f.fare_cls regexp t989.bf_fc_regex)
+and if(t989.bf_fc_len = 0, true, 
+    if(t989.bf_fc_wld = 0, f.fare_cls = t989.bf_fc, 
+    if(t989.bf_fc_wld = t989.bf_fc_len, left(f.fare_cls, t989.bf_fc_len-1) = left(t989.bf_fc, t989.bf_fc_len-1),
+    if(t989.bf_fc_wld = 1, instr(f.fare_cls, right(t989.bf_fc, t989.bf_fc_len-1)),
+    f.fare_cls regexp t989.bf_fc_regex
+    ))))
 and (f.rtg_nbr = t989.bf_rtg_nbr or t989.bf_rtg_nbr = '99999')
 and (f.ow_rt_ind = t989.bf_ow_rt or t989.bf_ow_rt = '')
 -- bf_type, not yet implemented
@@ -824,18 +834,6 @@ straight_join zz_cx.temp_fbcx_fbr_r fbcx on fbcx.rcid = ctrl.fbcx_id
 straight_join atpco_fare.atpco_r1_fare_cls r1 on (r1.carr_cd = f.carr_cd and r1.tar_nbr = ctrl.frt_nbr and r1.rule_nbr = f.rule_nbr and r1.fare_cls = f.fare_cls and r1.proc_ind in ('N', 'R'))
 straight_join atpco_fare.atpco_r1_fare_cls_state r1t on (r1t.rule_id = r1.rule_id)
 straight_join atpco_fare.atpco_r1_fare_cls_sup r1s on (r1s.rule_id = r1.rule_id)
-/*
-straight_join zz_cx.temp_tbl_fc_loc fc_loc on (fc_loc.doc_nbr_prime = fc.doc_nbr_prime and fc_loc.fc_cpn_nbr = fc.fc_cpn_nbr and fc_loc.map_di_ind = fc.map_di_ind)		
-# to allow base fare matching and r2 loaction testing using somewhat different orig/dest
-
-# forward direction location test
-left join zz_cx.loc_m fo on (fo.fc_loc = fc_loc.fc_orig and fo.loc_type = fbcx.loc1_type and fo.loc = fbcx.loc1 and fo.loc_t = fbcx.loc1_t978)
-left join zz_cx.loc_m fd on (fd.fc_loc = fc_loc.fc_dest and fd.loc_type = fbcx.loc2_type and fd.loc = fbcx.loc2 and fd.loc_t = fbcx.loc2_t978)
-
-# reverse direction location test
-left join zz_cx.loc_m ro on (ro.fc_loc = fc_loc.fc_dest and ro.loc_type = fbcx.loc1_type and ro.loc = fbcx.loc1 and ro.loc_t = fbcx.loc1_t978)
-left join zz_cx.loc_m rd on (rd.fc_loc = fc_loc.fc_orig and rd.loc_type = fbcx.loc2_type and rd.loc = fbcx.loc2 and rd.loc_t = fbcx.loc2_t978)
-*/
 where fc.doc_nbr_prime > 0
 
 #----------------------- conditions for fare record to r1 -------------------------------------------
@@ -874,27 +872,13 @@ and fc.fc_fbc = if(fbcx.fbc_rule = '', if(r1s.tkt_cd = '', f.fare_cls, r1s.tkt_c
 					end)
 				)
                 
-and if(fbcx.r2_fare_cls = '', true, if(instr(fbcx.r2_fare_cls, '-') = 0, fbcx.r2_fare_cls = f.fare_cls, f.fare_cls regexp fbcx.r2_fare_cls_regex))
-/*
--- The location check must be done last, otherwise it takes up a lot of time
--- !!! lesson: must use simple and effective logics to reduce workload?
-and (case ctrl.dir_ind
-		when '1' then true	# only 31 instance, not checking it for now, pass
-        when '2' then true	# only 20 
-		when '3' then fo.fc_loc is not null and fd.fc_loc is not null
-		when '4' then ro.fc_loc is not null and rd.fc_loc is not null
-		else # blank, no direction, then test either one is true
-				(fo.fc_loc is not null and fd.fc_loc is not null)
-                or
-                (ro.fc_loc is not null and rd.fc_loc is not null)
-	end)
-*/
+and if(fbcx.r2_fare_cls = '', true, if(instr(fbcx.r2_fare_cls, '-') = 0, fbcx.r2_fare_cls = f.fare_cls, f.fare_cls regexp fbcx.r2_fare_cls_regex));
 
 ;
 
-drop table if exists zz_cx.fm_fbr5_loc_4;
+drop table if exists zz_dev.fm_fbr5_loc_4;
 
-create table if not exists zz_cx.fm_fbr5_loc_4 engine = innoDB
+create table if not exists zz_dev.fm_fbr5_loc_4 engine = innoDB
 select distinct
 fc.fc_all_id, r2.rule_id as r2_25_rule_id, r3.cat_id as r3_25_cat_id, f.fare_id,'R' as map_type, 'T' as map_code
 

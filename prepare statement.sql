@@ -13,7 +13,7 @@ SET @s = CONCAT('CREATE TABLE IF NOT EXISTS zz_cx.temp_match_fbr_ctrl_', t_id, '
 	) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;');
 PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-SET @s = CONCAT('insert into zz_cx.temp_match_fbr_ctrl_', t_id, '
+SET @s = CONCAT('INSERT INTO zz_cx.temp_match_fbr_ctrl_', t_id, '
 (fc_all_id,doc_nbr_prime, doc_carr_nbr, trnsc_date, fc_cpn_nbr)
 SELECT DISTINCT fc_all_id,doc_nbr_prime, doc_carr_nbr, trnsc_date, fc_cpn_nbr
 FROM zz_cx.temp_tbl_fc_all fc
@@ -247,7 +247,7 @@ SET @s = CONCAT('CREATE TABLE IF NOT EXISTS zz_cx.fm_fbr1_loc_', t_id,'
 	AND if(fbcx.r2_fare_cls = '''', true, if(instr(fbcx.r2_fare_cls, ''-'') = 0, fbcx.r2_fare_cls = f.fare_cls, f.fare_cls regexp fbcx.r2_fare_cls_regex));');
 PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-SET @s = CONCAT('update zz_cx.temp_match_fbr_ctrl_',t_id, ' ctrl
+SET @s = CONCAT('UPDATE zz_cx.temp_match_fbr_ctrl_',t_id, ' ctrl
 	JOIN zz_cx.fm_fbr1_loc_',t_id, ' m ON (ctrl.fc_all_id = m.fc_all_id)
 	#(ctrl.doc_nbr_prime = m.doc_nbr_prime AND ctrl.fc_cpn_nbr = m.fc_cpn_nbr)
 	set ctrl.map_code = ''2'';		-- 2 for matched by both tour code AND accound code (BCODE)');
@@ -1036,3 +1036,55 @@ SET @s = CONCAT('CREATE TABLE IF NOT EXISTS zz_cx.fm_fbr5_loc_', t_id,' ENGINE =
 	AND if(fbcx.r2_fare_cls = '''', true, if(instr(fbcx.r2_fare_cls, ''-'') = 0, fbcx.r2_fare_cls = f.fare_cls, f.fare_cls regexp fbcx.r2_fare_cls_regex));');
 PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+
+# -----------------------------------------------------------------------------------------------------------------------------------------
+
+SET @s = CONCAT('INSERT INTO zz_cx.temp_match_fbr_tc_',t_id,' (fc_all_id, r2_25_rule_id, r3_25_cat_id, fare_id, map_type, map_code)
+	SELECT fc_all_id, r2_25_rule_id, r3_25_cat_id, fare_id, map_type, map_code
+	FROM zz_cx.fm_fbr2_loc_',t_id,';');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = CONCAT('INSERT INTO zz_cx.temp_match_fbr_tc_',t_id,' (fc_all_id, r2_25_rule_id, r3_25_cat_id, fare_id, map_type, map_code)
+	SELECT fc_all_id, r2_25_rule_id, r3_25_cat_id, fare_id, map_type, map_code
+	FROM zz_cx.fm_fbr3_loc_',t_id,';');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = CONCAT('INSERT INTO zz_cx.temp_match_fbr_tc_',t_id,' (fc_all_id, r2_25_rule_id, r3_25_cat_id, fare_id, map_type, map_code)
+	SELECT fc_all_id, r2_25_rule_id, r3_25_cat_id, fare_id, map_type, map_code
+	FROM zz_cx.fm_fbr4_loc_',t_id,';');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = CONCAT('INSERT INTO zz_cx.temp_match_fbr_tc_',t_id,' (fc_all_id, r2_25_rule_id, r3_25_cat_id, fare_id, map_type, map_code)
+	SELECT fc_all_id, r2_25_rule_id, r3_25_cat_id, fare_id, map_type, map_code
+	FROM zz_cx.fm_fbr5_loc_',t_id,';');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = CONCAT('UPDATE zz_cx.temp_match_fbr_ctrl_',t_id, ' ctrl
+	JOIN zz_cx.temp_match_fbr_tc_',t_id, ' m ON (ctrl.fc_all_id = m.fc_all_id)  #(ctrl.doc_nbr_prime = m.doc_nbr_prime and ctrl.fc_cpn_nbr = m.fc_cpn_nbr)
+	SET ctrl.map_code = ''1'';		-- 1 for matched by both tour code or accound code (BCODE)');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# send the result to a central table
+
+SET @s = CONCAT('INSERT INTO zz_cx.temp_tbl_fc_fare_map_fbr
+	(doc_nbr_prime, doc_carr_nbr, trnsc_date, fare_lockin_date, fc_cpn_nbr, fc_orig, fc_orig_city, fc_orig_cntry, fc_dest, fc_dest_city, fc_dest_cntry, fc_carr_cd, 
+	fc_fbc, fc_mile_plus, fc_tkt_dsg, fc_pax_type, fc_curr_cd, fc_amt, fc_roe, fc_nuc_amt, jrny_dep_date, tkt_tour_cd, mod_tour_cd, 
+	map_di_ind, map_type, map_code, spec_fare_id,cat25_r2_id, c25_r3_cat_id)
+	SELECT DISTINCT doc_nbr_prime, doc_carr_nbr, trnsc_date, fare_lockin_date, fc_cpn_nbr, fc_orig, fc_orig_c, fc_orig_n, fc_dest, fc_dest_c, fc_dest_n, fc_carr_cd, 
+	fc_fbc, fc_mile_plus, fc_tkt_dsg, fc_pax_type, fc_curr_cd, fc_amt, fc_roe, fc_nuc_amt, jrny_dep_date, tkt_tour_cd, mod_tour_cd, 
+	map_di_ind, map_type, map_code, fare_id, r2_25_rule_id, r3_25_cat_id
+	FROM zz_cx.fm_fbr1_loc_', t_id,' m
+	STRAIGHT_JOIN zz_cx.temp_tbl_fc_all fc ON (m.fc_all_id = fc.fc_all_id);');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @s = CONCAT('INSERT INTO zz_cx.temp_tbl_fc_fare_map_fbr
+	(doc_nbr_prime, doc_carr_nbr, trnsc_date, fare_lockin_date, fc_cpn_nbr, fc_orig, fc_orig_city, fc_orig_cntry, fc_dest, fc_dest_city, fc_dest_cntry, fc_carr_cd, 
+	fc_fbc, fc_mile_plus, fc_tkt_dsg, fc_pax_type, fc_curr_cd, fc_amt, fc_roe, fc_nuc_amt, jrny_dep_date, tkt_tour_cd, mod_tour_cd, 
+	map_di_ind, map_type, map_code, spec_fare_id,cat25_r2_id, c25_r3_cat_id)
+	SELECT DISTINCT doc_nbr_prime, doc_carr_nbr, trnsc_date, fare_lockin_date, fc_cpn_nbr, fc_orig, fc_orig_c, fc_orig_n, fc_dest, fc_dest_c, fc_dest_n, fc_carr_cd, 
+	fc_fbc, fc_mile_plus, fc_tkt_dsg, fc_pax_type, fc_curr_cd, fc_amt, fc_roe, fc_nuc_amt, jrny_dep_date, tkt_tour_cd, mod_tour_cd, 
+	map_di_ind, map_type, map_code, fare_id, r2_25_rule_id, r3_25_cat_id
+	FROM zz_cx.temp_match_fbr_tc_', t_id,' m
+	STRAIGHT_JOIN zz_cx.temp_tbl_fc_all fc ON (m.fc_all_id = fc.fc_all_id);');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
